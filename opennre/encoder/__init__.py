@@ -4,11 +4,11 @@ from __future__ import print_function
 
 from .cnn_encoder import CNNEncoder
 from .pcnn_encoder import PCNNEncoder
-from .bert_encoder import BERTEncoder, BERTEntityEncoder
+from .transformer_encoder import TransformerEncoder, TransformerEntityEncoder
 
 __all__ = [
     'CNNEncoder',
     'PCNNEncoder',
-    'BERTEncoder',
-    'BERTEntityEncoder'
+    'TransformerEncoder',
+    'TransformerEntityEncoder'
 ]

@@ -1,10 +1,10 @@
 import logging
 import torch
 import torch.nn as nn
-from transformers import BertModel, BertTokenizer
+from transformers import AutoModel, AutoTokenizer
 from .base_encoder import BaseEncoder
 
-class BERTEncoder(nn.Module):
+class TransformerEncoder(nn.Module):
     def __init__(self, max_length, pretrain_path, blank_padding=True, mask_entity=False):
         """
         Args:
@@ -14,11 +14,11 @@ class BERTEncoder(nn.Module):
         super().__init__()
         self.max_length = max_length
         self.blank_padding = blank_padding
-        self.hidden_size = 768
         self.mask_entity = mask_entity
-        logging.info('Loading BERT pre-trained checkpoint.')
-        self.bert = BertModel.from_pretrained(pretrain_path)
-        self.tokenizer = BertTokenizer.from_pretrained(pretrain_path)
+        logging.info(f'Loading {pretrain_path} pre-trained checkpoint.')
+        self.encoder = AutoModel.from_pretrained(pretrain_path)
+        self.hidden_size = self.encoder.config.hidden_size
+        self.tokenizer = AutoTokenizer.from_pretrained(pretrain_path)
 
     def forward(self, token, att_mask):
         """
@@ -28,7 +28,7 @@ class BERTEncoder(nn.Module):
         Return:
             (B, H), representations for sentences
         """
-        _, x = self.bert(token, attention_mask=att_mask)
+        _, x = self.encoder(token, attention_mask=att_mask)
         return x
 
     def tokenize(self, item):
@@ -96,7 +96,7 @@ class BERTEncoder(nn.Module):
         return indexed_tokens, att_mask
 
 
-class BERTEntityEncoder(nn.Module):
+class TransformerEntityEncoder(nn.Module):
     def __init__(self, max_length, pretrain_path, blank_padding=True, mask_entity=False):
         """
         Args:
@@ -106,11 +106,11 @@ class BERTEntityEncoder(nn.Module):
         super().__init__()
         self.max_length = max_length
         self.blank_padding = blank_padding
-        self.hidden_size = 768 * 2
         self.mask_entity = mask_entity
-        logging.info('Loading BERT pre-trained checkpoint.')
-        self.bert = BertModel.from_pretrained(pretrain_path)
-        self.tokenizer = BertTokenizer.from_pretrained(pretrain_path)
+        logging.info(f'Loading {pretrain_path} pre-trained checkpoint.')
+        self.encoder = AutoModel.from_pretrained(pretrain_path)
+        self.tokenizer = AutoTokenizer.from_pretrained(pretrain_path)
+        self.hidden_size = self.encoder.config.hidden_size * 2
         self.linear = nn.Linear(self.hidden_size, self.hidden_size)
 
     def forward(self, token, att_mask, pos1, pos2):
@@ -123,7 +123,9 @@ class BERTEntityEncoder(nn.Module):
         Return:
             (B, 2H), representations for sentences
         """
-        hidden, _ = self.bert(token, attention_mask=att_mask)
+        # hidden, _ = self.bert(token, attention_mask=att_mask).to_tuple()
+        hidden = self.encoder(token, attention_mask=att_mask).last_hidden_state
+
         # Get entity start hidden state
         onehot_head = torch.zeros(hidden.size()[:2]).float().to(hidden.device)  # (B, L)
         onehot_tail = torch.zeros(hidden.size()[:2]).float().to(hidden.device)  # (B, L)

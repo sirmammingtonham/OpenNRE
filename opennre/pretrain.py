@@ -152,10 +152,10 @@ def get_model(model_name, root_path=default_root_path):
         download('wiki80', root_path=root_path)
         rel2id = json.load(open(os.path.join(root_path, 'benchmark/wiki80/wiki80_rel2id.json')))
         if 'entity' in model_name:
-            sentence_encoder = encoder.BERTEntityEncoder(
+            sentence_encoder = encoder.TransformerEntityEncoder(
                 max_length=80, pretrain_path=os.path.join(root_path, 'pretrain/bert-base-uncased'))
         else:
-            sentence_encoder = encoder.BERTEncoder(
+            sentence_encoder = encoder.TransformerEncoder(
                 max_length=80, pretrain_path=os.path.join(root_path, 'pretrain/bert-base-uncased'))
         m = model.SoftmaxNN(sentence_encoder, len(rel2id), rel2id)
         m.load_state_dict(torch.load(ckpt, map_location='cpu')['state_dict'])
@@ -166,10 +166,10 @@ def get_model(model_name, root_path=default_root_path):
         download('tacred', root_path=root_path)
         rel2id = json.load(open(os.path.join(root_path, 'benchmark/tacred/tacred_rel2id.json')))
         if 'entity' in model_name:
-            sentence_encoder = encoder.BERTEntityEncoder(
+            sentence_encoder = encoder.TransformerEntityEncoder(
                 max_length=80, pretrain_path=os.path.join(root_path, 'pretrain/bert-base-uncased'))
         else:
-            sentence_encoder = encoder.BERTEncoder(
+            sentence_encoder = encoder.TransformerEncoder(
                 max_length=80, pretrain_path=os.path.join(root_path, 'pretrain/bert-base-uncased'))
         m = model.SoftmaxNN(sentence_encoder, len(rel2id), rel2id)
         m.load_state_dict(torch.load(ckpt, map_location='cpu')['state_dict'])

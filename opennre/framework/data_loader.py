@@ -4,6 +4,32 @@ import os, random, json, logging
 import numpy as np
 import sklearn.metrics
 
+class _RepeatSampler(object):
+    """ Sampler that repeats forever.
+
+    Args:
+        sampler (Sampler)
+    """
+    def __init__(self, sampler):
+        self.sampler = sampler
+
+    def __iter__(self):
+        while True:
+            yield from iter(self.sampler)
+
+class FastDataLoader(data.dataloader.DataLoader):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        object.__setattr__(self, 'batch_sampler', _RepeatSampler(self.batch_sampler))
+        self.iterator = super().__iter__()
+
+    def __len__(self):
+        return len(self.batch_sampler.sampler)
+
+    def __iter__(self):
+        for i in range(len(self)):
+            yield next(self.iterator)
+
 class SentenceREDataset(data.Dataset):
     """
     Sentence-level relation extraction dataset
@@ -38,7 +64,7 @@ class SentenceREDataset(data.Dataset):
         item = self.data[index]
         seq = list(self.tokenizer(item, **self.kwargs))
         res = [self.rel2id[item['relation']]] + seq
-        return [self.rel2id[item['relation']]] + seq # label, seq1, seq2, ...
+        return res # label, seq1, seq2, ...
     
     def collate_fn(data):
         data = list(zip(*data))
@@ -103,7 +129,7 @@ class SentenceREDataset(data.Dataset):
         return result
     
 def SentenceRELoader(path, rel2id, tokenizer, batch_size, 
-        shuffle, num_workers=8, collate_fn=SentenceREDataset.collate_fn, **kwargs):
+        shuffle, num_workers=0, collate_fn=SentenceREDataset.collate_fn, **kwargs):
     dataset = SentenceREDataset(path = path, rel2id = rel2id, tokenizer = tokenizer, kwargs=kwargs)
     data_loader = data.DataLoader(dataset=dataset,
             batch_size=batch_size,

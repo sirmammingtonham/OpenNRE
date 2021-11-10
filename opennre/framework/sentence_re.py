@@ -29,7 +29,8 @@ class SentenceRE(nn.Module):
                 model.rel2id,
                 model.sentence_encoder.tokenize,
                 batch_size,
-                True)
+                True,
+                )
 
         if val_path != None:
             self.val_loader = SentenceRELoader(
@@ -37,7 +38,8 @@ class SentenceRE(nn.Module):
                 model.rel2id,
                 model.sentence_encoder.tokenize,
                 batch_size,
-                False)
+                False,
+                )
         
         if test_path != None:
             self.test_loader = SentenceRELoader(
@@ -45,8 +47,8 @@ class SentenceRE(nn.Module):
                 model.rel2id,
                 model.sentence_encoder.tokenize,
                 batch_size,
-                False
-            )
+                False,
+                )
         # Model
         self.model = model
         self.parallel_model = nn.DataParallel(self.model)
